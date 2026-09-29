@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="后训练任务合成：从 PostTrainBench 范式到 Harbor 可执行实验。">
+  <title>后训练任务合成｜研究任务档案</title>
+  <style>
+    :root {
+      --paper: #f4f0e8;
+      --paper-deep: #e8e0d4;
+      --ink: #172333;
+      --ink-soft: #536170;
+      --line: #c8c0b4;
+      --navy: #16364d;
+      --navy-deep: #102b3d;
+      --orange: #d85e32;
+      --orange-soft: #f3ded3;
+      --sage: #42675e;
+      --sage-soft: #dce9e2;
+      --shadow: 0 18px 44px rgba(33, 41, 47, .08);
+      --serif: "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+      --sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(22, 54, 77, .032) 1px, transparent 1px) 0 0 / 36px 36px,
+        linear-gradient(rgba(22, 54, 77, .025) 1px, transparent 1px) 0 0 / 36px 36px,
+        var(--paper);
+      font-family: var(--sans);
+      line-height: 1.65;
+    }
+
+    .page { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 62px 0 76px; }
+
+    .masthead {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 244px;
+      gap: 56px;
+      align-items: end;
+      padding: 0 0 32px;
+      border-bottom: 1px solid var(--ink);
+    }
+    .eyebrow, .section-kicker, .card-label, .metric-label, .timeline-index {
+      color: var(--orange);
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    .eyebrow { margin: 0 0 15px; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      max-width: 760px;
+      margin-bottom: 9px;
+      font-family: var(--serif);
+      font-size: clamp(39px, 6vw, 68px);
+      font-weight: 700;
+      letter-spacing: -.055em;
+      line-height: 1.06;
+    }
+    .subtitle { margin: 0; color: var(--ink-soft); font-family: var(--serif); font-size: 20px; }
+    .dossier-mark {
+      min-height: 122px;
+      padding: 15px 18px;
+      color: var(--paper);
+      background: var(--navy);
+      border-left: 5px solid var(--orange);
+    }
+    .dossier-mark strong { display: block; margin: 7px 0 4px; font-family: var(--serif); font-size: 25px; font-weight: 600; }
+    .dossier-mark span { color: #cbd6dc; font-size: 12px; }
+
+    .statement {
+      position: relative;
+      margin: 31px 0 41px;
+      padding: 21px 28px 21px 32px;
+      max-width: 910px;
+      color: var(--navy-deep);
+      background: rgba(255,255,255,.38);
+      border: 1px solid var(--line);
+      font-family: var(--serif);
+      font-size: clamp(19px, 2.25vw, 25px);
+      line-height: 1.55;
+    }
+    .statement::before { content: "“"; position: absolute; left: 8px; top: -13px; color: var(--orange); font-family: var(--serif); font-size: 55px; }
+    .meta-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 37px; }
+    .meta-pill { padding: 5px 10px; color: var(--navy); border: 1px solid #afbdc3; background: rgba(255,255,255,.35); font-size: 12px; }
+
+    .accordion { border-top: 1px solid var(--ink); }
+    .accordion-item { border-bottom: 1px solid var(--ink); }
+    .accordion-trigger {
+      display: grid;
+      grid-template-columns: 82px 1fr 42px;
+      width: 100%;
+      gap: 14px;
+      align-items: center;
+      padding: 23px 0;
+      color: var(--ink);
+      background: none;
+      border: 0;
+      cursor: pointer;
+      font: inherit;
+      text-align: left;
+    }
+    .accordion-trigger:hover .accordion-title { color: var(--orange); }
+    .step-no { color: var(--orange); font-family: var(--serif); font-size: 22px; }
+    .accordion-title { font-family: var(--serif); font-size: clamp(22px, 3vw, 30px); font-weight: 700; transition: color .18s ease; }
+    .toggle {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      justify-self: end;
+      color: var(--navy);
+      border: 1px solid var(--navy);
+      border-radius: 50%;
+      font-size: 25px;
+      font-weight: 300;
+      line-height: 1;
+      transition: transform .22s ease, background .22s ease, color .22s ease;
+    }
+    .accordion-trigger[aria-expanded="true"] .toggle { color: var(--paper); background: var(--navy); transform: rotate(45deg); }
+    .accordion-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .32s ease; }
+    .accordion-panel > div { overflow: hidden; }
+    .accordion-panel.is-open { grid-template-rows: 1fr; }
+    .panel-inner { padding: 2px 0 39px; }
+
+    .section-intro { max-width: 760px; margin-bottom: 24px; color: var(--ink-soft); font-size: 16px; }
+    .section-intro strong { color: var(--ink); font-weight: 700; }
+    .core-thesis { margin: 0 0 24px; padding: 17px 20px; color: var(--navy-deep); background: var(--orange-soft); border-left: 4px solid var(--orange); font-family: var(--serif); font-size: clamp(18px, 2.1vw, 23px); font-weight: 700; line-height: 1.5; }
+    .core-thesis span { display: block; margin-bottom: 4px; color: #9b401f; font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .author-note { margin: 16px 0 0; padding: 12px 15px; color: var(--ink-soft); background: rgba(255,255,255,.32); border: 1px dashed var(--line); font-size: 13px; }
+    .author-note b { color: var(--navy); }
+    .harbor-thesis { margin: 0 0 24px; padding: 17px 20px; color: var(--paper); background: var(--navy); border-left: 4px solid var(--orange); font-family: var(--serif); font-size: clamp(18px, 2.1vw, 23px); font-weight: 700; line-height: 1.5; }
+    .harbor-thesis span { display: block; margin-bottom: 4px; color: #f1aa87; font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .principles { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+    .principle { min-height: 176px; padding: 21px 20px; background: rgba(255,255,255,.24); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .principle h3 { margin: 7px 0 8px; font-family: var(--serif); font-size: 20px; }
+    .principle p { margin: 0; color: var(--ink-soft); font-size: 14px; }
+
+    .flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr auto 1fr; align-items: center; gap: 8px; margin-top: 24px; }
+    .flow-node { min-height: 99px; padding: 15px; border: 1px solid var(--line); background: rgba(255,255,255,.37); }
+    .flow-node strong { display: block; margin-bottom: 4px; font-family: var(--serif); font-size: 18px; }
+    .flow-node span { color: var(--ink-soft); font-size: 12px; }
+    .flow-node.emphasis { color: var(--paper); background: var(--navy); border-color: var(--navy); }
+    .flow-node.emphasis span { color: #cbd6dc; }
+    .flow-arrow { color: var(--orange); font-size: 22px; }
+    .mapping-note { margin: 20px 0 0; padding-left: 16px; border-left: 3px solid var(--orange); color: var(--ink-soft); font-size: 14px; }
+    .environment-guide { display: grid; grid-template-columns: 1fr .9fr; gap: 18px; margin-top: 30px; padding: 20px; background: rgba(255,255,255,.25); border: 1px solid var(--line); }
+    .environment-guide h3 { margin: 6px 0 8px; font-family: var(--serif); font-size: 23px; }
+    .environment-guide p { margin: 0; color: var(--ink-soft); font-size: 13px; }
+    .environment-checklist { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 15px; }
+    .environment-check { padding: 8px 10px; border-left: 2px solid var(--orange); background: rgba(244,240,232,.7); color: var(--ink-soft); font-size: 12px; }
+    .environment-check b { display: block; color: var(--navy); font-size: 13px; }
+    .environment-code { margin: 0; padding: 14px 15px; overflow-x: auto; color: #d9e1e3; background: #102b3d; font-family: "SFMono-Regular", Consolas, monospace; font-size: 11px; line-height: 1.75; white-space: pre-wrap; }
+    .environment-code em { color: #f1aa87; font-style: normal; }
+    .time-guide { margin-top: 14px; padding: 18px 20px; border: 1px solid var(--line); background: rgba(255,255,255,.18); }
+    .time-guide h3 { margin: 5px 0 12px; font-family: var(--serif); font-size: 22px; }
+    .time-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .time-item { padding: 11px; border-top: 2px solid var(--navy); background: #fbf9f4; }
+    .time-item b { display: block; margin: 4px 0; color: var(--navy); font-family: var(--serif); font-size: 16px; }
+    .time-item p { margin: 0; color: var(--ink-soft); font-size: 11px; line-height: 1.55; }
+
+    .synthesis-lede { display: grid; grid-template-columns: 1.05fr .95fr; gap: 28px; align-items: end; margin-bottom: 30px; }
+    .synthesis-lede h2 { margin: 8px 0 0; font-family: var(--serif); font-size: clamp(26px, 3.7vw, 40px); letter-spacing: -.03em; line-height: 1.2; }
+    .synthesis-lede p { margin: 0; color: var(--ink-soft); font-size: 15px; }
+    .task-scenario { margin-bottom: 30px; padding: 22px; color: var(--paper); background: var(--navy); border-left: 5px solid var(--orange); }
+    .task-scenario .section-kicker, .task-scenario .card-label { color: #f1aa87; }
+    .task-scenario h3 { max-width: 820px; margin: 6px 0 9px; font-family: var(--serif); font-size: clamp(24px, 3.3vw, 34px); line-height: 1.25; }
+    .task-scenario > p { max-width: 860px; margin: 0; color: #d5e0e3; font-size: 14px; }
+    .scenario-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-top: 20px; background: rgba(255,255,255,.28); }
+    .scenario-item { min-height: 115px; padding: 14px; background: var(--navy-deep); }
+    .scenario-item strong { display: block; margin: 5px 0; color: #fff; font-family: var(--serif); font-size: 18px; }
+    .scenario-item span { color: #c7d3d8; font-size: 12px; line-height: 1.55; }
+    .subsection { margin-top: 39px; }
+    .subsection-heading { display: flex; align-items: baseline; gap: 12px; margin-bottom: 18px; }
+    .subsection-heading h3 { margin: 0; font-family: var(--serif); font-size: 25px; }
+    .subsection-heading span { color: var(--ink-soft); font-size: 13px; }
+    .synthesis-chain { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 15px; background: var(--navy); color: var(--paper); }
+    .chain-node { padding: 5px 8px; border: 1px solid rgba(255,255,255,.35); font-size: 13px; }
+    .chain-arrow { color: #f1a883; }
+    .framework-bridge { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 16px 0; }
+    .bridge-card { padding: 17px; background: rgba(255,255,255,.3); border: 1px solid var(--line); }
+    .bridge-card h4 { margin: 6px 0 10px; color: var(--navy); font-family: var(--serif); font-size: 20px; }
+    .bridge-card p { margin: 0 0 12px; color: var(--ink-soft); font-size: 12px; line-height: 1.65; }
+    .bridge-card p:last-child { margin-bottom: 0; }
+    .bridge-label { color: var(--orange); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    .bridge-answer { padding-top: 10px; border-top: 1px solid var(--line); }
+    .bridge-answer b { color: var(--navy); }
+
+    .decision-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0; margin-top: 16px; border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+    .decision { display: grid; grid-template-columns: 116px 1fr; gap: 14px; padding: 16px 17px; background: rgba(255,255,255,.22); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .decision h4 { margin: 1px 0 0; color: var(--navy); font-family: var(--serif); font-size: 17px; }
+    .decision p { margin: 0; color: var(--ink-soft); font-size: 13px; }
+    .decision p b { color: var(--ink); }
+
+    .quality-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .quality-card { min-height: 144px; padding: 16px; background: #fbf9f4; border-top: 3px solid var(--navy); box-shadow: 0 8px 20px rgba(22,54,77,.05); }
+    .quality-card h4 { margin: 6px 0; font-family: var(--serif); font-size: 18px; }
+    .quality-card p { margin: 0; color: var(--ink-soft); font-size: 12px; line-height: 1.6; }
+    .quality-card .card-label { color: var(--sage); }
+    .validity-guide { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+    .validity-case { padding: 15px 17px; border: 1px solid var(--line); }
+    .validity-case h4 { margin: 5px 0; font-family: var(--serif); font-size: 20px; }
+    .validity-case p { margin: 0; color: var(--ink-soft); font-size: 13px; }
+    .validity-case.valid { border-top: 3px solid var(--sage); background: var(--sage-soft); }
+    .validity-case.invalid { border-top: 3px solid var(--orange); background: var(--orange-soft); }
+    .diagnostic-banner { margin: 14px 0; padding: 14px 17px; color: var(--navy-deep); background: #edf0ea; border-left: 4px solid var(--sage); font-size: 13px; }
+    .diagnostic-banner b { color: var(--navy); }
+    .diagnostic-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0; }
+    .diagnostic-metric { padding: 13px; background: #fbf9f4; border-top: 3px solid var(--navy); }
+    .diagnostic-metric b { display: block; margin: 3px 0; color: var(--navy); font-family: var(--serif); font-size: 25px; letter-spacing: -.02em; }
+    .diagnostic-metric b.negative { color: #a63f21; }
+    .diagnostic-metric span { color: var(--ink-soft); font-size: 11px; }
+    .score-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .score-table th, .score-table td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: right; }
+    .score-table th:first-child, .score-table td:first-child { text-align: left; }
+    .score-table th { color: var(--ink-soft); font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+    .score-table .up { color: var(--sage); font-weight: 700; }
+    .score-table .down { color: #a63f21; font-weight: 700; }
+    .score-table tfoot { color: var(--navy); background: rgba(22,54,77,.07); font-weight: 700; }
+    .result-note { margin: 12px 0 0; color: var(--ink-soft); font-size: 12px; }
+    .insight-grid { display: grid; grid-template-columns: 1.05fr 1fr 1fr; gap: 10px; margin-top: 16px; }
+    .insight { padding: 15px; border: 1px solid var(--line); background: rgba(255,255,255,.28); }
+    .insight h4 { margin: 6px 0; color: var(--navy); font-family: var(--serif); font-size: 19px; }
+    .insight p { margin: 0; color: var(--ink-soft); font-size: 12px; line-height: 1.65; }
+    .insight.observed { border-top: 3px solid var(--orange); }
+    .insight.hypothesis { border-top: 3px solid var(--sage); }
+
+    .attempts { position: relative; margin: 0; padding: 0; list-style: none; }
+    .attempts::before { content: ""; position: absolute; left: 9px; top: 12px; bottom: 12px; width: 1px; background: var(--line); }
+    .attempt { position: relative; display: grid; grid-template-columns: 28px 155px 1fr; gap: 13px; padding: 0 0 24px; }
+    .attempt:last-child { padding-bottom: 0; }
+    .attempt-dot { position: relative; z-index: 1; width: 19px; height: 19px; margin-top: 5px; border: 4px solid var(--paper); border-radius: 50%; background: var(--orange); box-shadow: 0 0 0 1px var(--orange); }
+    .attempt-label { padding-top: 1px; color: var(--navy); font-family: var(--serif); font-size: 18px; font-weight: 700; }
+    .attempt-body { padding: 15px 17px; background: rgba(255,255,255,.34); border: 1px solid var(--line); }
+    .attempt-body p { margin-bottom: 10px; color: var(--ink-soft); font-size: 13px; }
+    .attempt-body p:last-child { margin-bottom: 0; }
+    .attempt-body b { color: var(--ink); }
+    .status { display: inline-block; margin-right: 8px; padding: 2px 7px; font-size: 11px; font-weight: 700; letter-spacing: .04em; }
+    .status.done { color: #1f5147; background: var(--sage-soft); }
+    .status.active { color: #8e351c; background: var(--orange-soft); }
+    .status.pending { color: #52606b; background: #e1e5e5; }
+
+    .conclusion { display: grid; grid-template-columns: 140px 1fr; gap: 20px; margin-top: 30px; padding: 20px 22px; color: var(--paper); background: var(--navy); }
+    .conclusion h3 { margin: 0; font-family: var(--serif); font-size: 22px; }
+    .conclusion p { margin: 0; color: #d9e1e3; font-size: 14px; }
+    .conclusion strong { color: #fff; }
+
+    footer { display: flex; justify-content: space-between; gap: 16px; margin-top: 26px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--ink-soft); font-size: 11px; }
+    footer span:last-child { text-align: right; }
+
+    @media (max-width: 820px) {
+      .page { width: min(100% - 28px, 680px); padding-top: 32px; }
+      .masthead, .synthesis-lede { grid-template-columns: 1fr; gap: 22px; }
+      .dossier-mark { width: 215px; }
+      .principles, .quality-grid { grid-template-columns: repeat(2, 1fr); }
+      .framework-bridge { grid-template-columns: 1fr; }
+      .time-grid { grid-template-columns: repeat(2, 1fr); }
+      .scenario-grid { grid-template-columns: repeat(2, 1fr); }
+      .diagnostic-grid { grid-template-columns: repeat(2, 1fr); }
+      .insight-grid { grid-template-columns: 1fr; }
+      .flow { grid-template-columns: 1fr; gap: 5px; }
+      .flow-arrow { transform: rotate(90deg); text-align: center; }
+      .environment-guide { grid-template-columns: 1fr; }
+      .decision-grid { grid-template-columns: 1fr; }
+      .attempt { grid-template-columns: 26px 1fr; }
+      .attempt-label { grid-column: 2; }
+      .attempt-body { grid-column: 2; }
+      .conclusion { grid-template-columns: 1fr; gap: 5px; }
+    }
+    @media (max-width: 520px) {
+      .page { width: min(100% - 24px, 680px); }
+      h1 { font-size: 42px; }
+      .principles, .quality-grid { grid-template-columns: 1fr; }
+      .time-grid, .validity-guide { grid-template-columns: 1fr; }
+      .scenario-grid { grid-template-columns: 1fr; }
+      .diagnostic-grid { grid-template-columns: 1fr; }
+      .accordion-trigger { grid-template-columns: 50px 1fr 38px; gap: 8px; }
+      .step-no { font-size: 18px; }
+      .accordion-title { font-size: 22px; }
+      .decision { grid-template-columns: 1fr; gap: 4px; }
+      .environment-checklist { grid-template-columns: 1fr; }
+      footer { flex-direction: column; }
+      footer span:last-child { text-align: left; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="masthead">
+      <div>
+        <p class="eyebrow">Research dossier / 01</p>
+        <h1>后训练任务合成</h1>
+        <p class="subtitle">从研究范式到可执行实验</p>
+      </div>
+      <aside class="dossier-mark" aria-label="任务元信息">
+        <span>任务档案</span>
+        <strong>GSM-SR / 01</strong>
+        <span>PostTrainBench-like<br>Harbor task package</span>
+      </aside>
+    </header>
+
+    <blockquote class="statement">合成的不是一条 SFT 样本，而是一道让 Agent 在受限资源下自主完成后训练研究、并能被独立评测的完整任务。</blockquote>
+
+    <div class="meta-row" aria-label="任务标签">
+      <span class="meta-pill">Qwen2.5-Math-1.5B Base</span>
+      <span class="meta-pill">1 GPU / 训练 1 小时</span>
+      <span class="meta-pill">LoRA adapter submission</span>
+      <span class="meta-pill">GSM-Symbolic robustness</span>
+    </div>
+
+    <section class="accordion" aria-label="展示内容">
+      <article class="accordion-item">
+        <button class="accordion-trigger" type="button" aria-expanded="true" aria-controls="panel-01" id="trigger-01">
+          <span class="step-no">01</span>
+          <span class="accordion-title">PostTrainBench：它在测什么？</span>
+          <span class="toggle" aria-hidden="true">+</span>
+        </button>
+        <div class="accordion-panel is-open" id="panel-01" role="region" aria-labelledby="trigger-01">
+          <div>
+            <div class="panel-inner">
+              <p class="core-thesis"><span>PostTrainBench 的核心逻辑</span>在给定时间、算力和数据约束下，对指定基座模型开展后训练研究，提交模型或 adapter，并由固定评测程序衡量它在指定 benchmark 上的表现。</p>
+              <p class="section-intro"><strong>核心对象是 Agent 的研究能力。</strong>被比较的不是一套预先规定的训练脚本，而是 Agent 在共同边界内作出的研究决策，以及这些决策最终带来的模型能力变化。对任务作者而言，重点是设计可审查的研究环境，而不是替 Agent 写出训练配方。</p>
+              <div class="principles">
+                <div class="principle"><span class="card-label">作者工作 01</span><h3>设计任务场景</h3><p>指定 base model、目标能力与下游 benchmark：明确 Agent 要解决的后训练研究问题。</p></div>
+                <div class="principle"><span class="card-label">作者工作 02</span><h3>设定边界与自由度</h3><p>限定时间、GPU、允许数据和禁止事项；同时保留数据处理、训练方法与超参数的探索空间。</p></div>
+                <div class="principle"><span class="card-label">作者工作 03</span><h3>搭建验收闭环</h3><p>约定提交模型或 adapter，并由不可修改的固定评测程序加载产物、计算 benchmark 指标。</p></div>
+              </div>
+              <p class="author-note"><b>关于“数据”的边界：</b>训练样本可以是任务输入的一部分，但作者不一定要新造一个训练数据集；必须做到的是明确允许数据的来源与版本、禁止数据以及防止评测泄漏的规则。</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="accordion-item">
+        <button class="accordion-trigger" type="button" aria-expanded="false" aria-controls="panel-02" id="trigger-02">
+          <span class="step-no">02</span>
+          <span class="accordion-title">Harbor：它如何承载任务？</span>
+          <span class="toggle" aria-hidden="true">+</span>
+        </button>
+        <div class="accordion-panel" id="panel-02" role="region" aria-labelledby="trigger-02">
+          <div>
+            <div class="panel-inner">
+              <p class="harbor-thesis"><span>Harbor 的核心作用</span>将任务定义转化为一次可执行、可验收的 Agent 运行：按统一契约准备环境、收集提交产物，并在独立 verifier 中产出可比较的评分结果。</p>
+              <p class="section-intro">因此，Harbor 不只是目录格式；它也是任务的<strong>运行与验收框架</strong>。它不替作者定义研究问题、数据边界或评分目标——这些仍是“合成题目”的工作。</p>
+              <div class="principles">
+                <div class="principle"><span class="card-label">Harbor 层 01</span><h3>任务契约</h3><p><code>instruction.md</code> 和 <code>task.toml</code> 说明目标、约束、产物、超时与资源申请，让执行方按同一约定接收任务。</p></div>
+                <div class="principle"><span class="card-label">Harbor 层 02</span><h3>执行环境</h3><p>通过 Dockerfile 或预构建镜像准备依赖、指定模型、允许数据、工作目录与运行时资源。</p></div>
+                <div class="principle"><span class="card-label">Harbor 层 03</span><h3>独立验收</h3><p>Agent 结束后收集 adapter；独立 verifier 以固定脚本加载产物、计算指标并写入 reward。</p></div>
+              </div>
+              <div class="flow" aria-label="Harbor 任务流程">
+                <div class="flow-node"><strong>instruction.md</strong><span>目标、输入、约束与提交格式</span></div><span class="flow-arrow">→</span>
+                <div class="flow-node emphasis"><strong>Agent</strong><span>在受限环境中研究与训练</span></div><span class="flow-arrow">→</span>
+                <div class="flow-node"><strong>LoRA adapter</strong><span>可加载的最终提交产物</span></div><span class="flow-arrow">→</span>
+                <div class="flow-node"><strong>verifier</strong><span>独立加载、固定推理、计算指标</span></div><span class="flow-arrow">→</span>
+                <div class="flow-node"><strong>reward.json</strong><span>结构化结果与有效性记录</span></div>
+              </div>
+              <p class="mapping-note">本题将 PostTrainBench 的“后训练研究任务”范式，适配为 Harbor 的 instruction、environment、artifact 和 verifier 协议。</p>
+              <section class="environment-guide" aria-labelledby="environment-heading">
+                <div>
+                  <p class="section-kicker">任务作者需要准备的执行环境</p>
+                  <h3 id="environment-heading">把 Agent 真正需要的东西预先写进环境。</h3>
+                  <p>环境的目标是让 Agent 一进入沙箱就能研究，而不是临时安装依赖、下载不受控模型或猜测文件位置。本题用 <code>environment/Dockerfile</code> 写环境，用 <code>task.toml</code> 写运行约束。</p>
+                  <div class="environment-checklist">
+                    <div class="environment-check"><b>基础运行时</b>Python、PyTorch、Transformers、PEFT 等固定版本。</div>
+                    <div class="environment-check"><b>模型与合法数据</b>预置 base model 与允许训练集，固定来源和 revision。</div>
+                    <div class="environment-check"><b>目录与提交路径</b>明确 <code>/workspace</code>、<code>/data</code>、<code>/models</code> 与 artifacts 路径。</div>
+                    <div class="environment-check"><b>资源与隔离</b>在 <code>task.toml</code> 声明 GPU、CPU、内存、超时和网络策略。</div>
+                  </div>
+                </div>
+                <pre class="environment-code" aria-label="环境定义示意"><em># environment/Dockerfile</em>
+FROM &lt;fixed-runtime-image&gt;
+RUN pip install package==version
+RUN prepare /models/base + /data/train
+WORKDIR /workspace
+
+<em># task.toml</em>
+[environment]
+gpus = 1
+memory_mb = ...
+network_mode = ...</pre>
+              </section>
+              <section class="time-guide" aria-labelledby="time-heading">
+                <p class="section-kicker">时间约束写在哪里？</p>
+                <h3 id="time-heading">不同阶段，由不同文件负责约束。</h3>
+                <div class="time-grid">
+                  <div class="time-item"><span class="card-label">Build / Setup</span><b>环境构建与初始化</b><p>写在 README 的 Harbor 运行命令及 timeout multiplier；不属于 Agent 研究预算。</p></div>
+                  <div class="time-item"><span class="card-label">task.toml</span><b>Agent 总执行：4,800 秒</b><p>Harbor 的硬超时。覆盖 Agent 实际研究、development 比较和提交。</p></div>
+                  <div class="time-item"><span class="card-label">instruction.md</span><b>训练最多：3,600 秒</b><p>任务规则：其余时间留给有限 development 对照与保存证据。</p></div>
+                  <div class="time-item"><span class="card-label">task.toml</span><b>独立 verifier：2,400 秒</b><p>最终 base / adapter 成对评分的独立预算，不占 Agent 研究时间。</p></div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="accordion-item">
+        <button class="accordion-trigger" type="button" aria-expanded="false" aria-controls="panel-03" id="trigger-03">
+          <span class="step-no">03</span>
+          <span class="accordion-title">我如何合成这道题？</span>
+          <span class="toggle" aria-hidden="true">+</span>
+        </button>
+        <div class="accordion-panel" id="panel-03" role="region" aria-labelledby="trigger-03">
+          <div>
+            <div class="panel-inner">
+              <section class="task-scenario" aria-labelledby="scenario-heading">
+                <p class="section-kicker">任务场景与定义</p>
+                <h3 id="scenario-heading">我合成的是一道评测 Agent 后训练研究能力的 benchmark task，而不是一个新的数学 benchmark。</h3>
+                <p>它以 GSM-Symbolic 作为固定的下游能力评测：Agent 在受限时间、算力和数据边界内，自主后训练指定 base model，提交 LoRA 与过程证据；独立 verifier 再判断产物的能力与合规性。</p>
+                <div class="scenario-grid">
+                  <div class="scenario-item"><span class="card-label">研究对象</span><strong>执行 Agent</strong><span>考察它是否能自主提出并实施有效的后训练策略。</span></div>
+                  <div class="scenario-item"><span class="card-label">固定输入</span><strong>Base + 边界</strong><span>Qwen base、1 GPU、训练 1 小时、合法 train/dev 数据切分。</span></div>
+                  <div class="scenario-item"><span class="card-label">研究交付</span><strong>LoRA + 证据</strong><span>adapter、最终训练脚本、实际训练 JSONL 与运行摘要。</span></div>
+                  <div class="scenario-item"><span class="card-label">最终验收</span><strong>独立 verifier</strong><span>审计提交数据后，在固定 750 题上成对比较 base 与 adapter。</span></div>
+                </div>
+              </section>
+              <div class="synthesis-lede">
+                <div><p class="section-kicker">GSM-Symbolic robustness</p><h2>将“稳健性后训练”拆成一组可执行、可审查的设计决策。</h2></div>
+                <p>PostTrainBench 定义“要评测怎样的后训练研究”；Harbor 定义“如何把这项研究运行并验收”。本题的合成工作，就是把前者的范式逐项翻译成后者的任务包。</p>
+              </div>
+
+              <section class="subsection" aria-labelledby="design-heading">
+                <div class="subsection-heading"><h3 id="design-heading">A. 从范式到任务包</h3><span>PostTrainBench 的核心要素如何在 Harbor 中落地</span></div>
+                <div class="synthesis-chain" aria-label="任务合成链路">
+                  <span class="chain-node">研究目标</span><span class="chain-arrow">→</span><span class="chain-node">资源与数据边界</span><span class="chain-arrow">→</span><span class="chain-node">Agent 自由度</span><span class="chain-arrow">→</span><span class="chain-node">产物协议</span><span class="chain-arrow">→</span><span class="chain-node">独立评测</span><span class="chain-arrow">→</span><span class="chain-node">质量控制</span>
+                </div>
+                <div class="framework-bridge" aria-label="PostTrainBench、任务设计与 Harbor 的映射">
+                  <article class="bridge-card"><span class="bridge-label">PostTrainBench 核心</span><h4>指定研究目标</h4><p>让 Agent 改善一个指定 base model 在给定 benchmark 上的表现。</p><p class="bridge-answer"><b>本题设计：</b>指定 Qwen2.5-Math-1.5B base，目标是 GSM-Symbolic 中数值替换和条件增加下的稳健性。</p><p class="bridge-answer"><b>Harbor 落地：</b><code>instruction.md</code> 描述研究目标；<code>/models/base</code> 固定基座。</p></article>
+                  <article class="bridge-card"><span class="bridge-label">PostTrainBench 核心</span><h4>受限下的自主研究</h4><p>固定时间、算力和数据边界，但不预设训练配方，保留 Agent 的研究决策空间。</p><p class="bridge-answer"><b>本题设计：</b>1 GPU、训练最多 3,600 秒；7,223 条 GSM8K train 可训练，250 条 dev 仅供策略比较。</p><p class="bridge-answer"><b>Harbor 落地：</b><code>task.toml</code> 声明资源与 allowlist；环境预置两份数据；题面写明训练与开发边界。</p></article>
+                  <article class="bridge-card"><span class="bridge-label">PostTrainBench 核心</span><h4>固定产物与比较</h4><p>提交后训练产物，并以固定下游协议衡量最终模型能力。</p><p class="bridge-answer"><b>本题设计：</b>提交 PEFT LoRA adapter；Main / P1 / P2 各 250 题，三项宏平均。</p><p class="bridge-answer"><b>Harbor 落地：</b>artifacts 收集 adapter；独立 <code>tests/</code> verifier 重载 base 并写入 <code>reward.json</code>。</p></article>
+                </div>
+                <div class="decision-grid">
+                  <div class="decision"><h4>研究目标</h4><p><b>在数值替换与条件增加下提升数学推理稳健性。</b>从单一准确率改为观察 Main、P1、P2 的能力退化。</p></div>
+                  <div class="decision"><h4>范式继承</h4><p><b>保留 PostTrainBench 的 Agent 自主研究结构。</b>不预设训练配方，Agent 决定数据处理、合成、LoRA 和超参数。</p></div>
+                  <div class="decision"><h4>资源改编</h4><p><b>Qwen2.5-Math-1.5B base、1 GPU、训练 3,600 秒。</b>Agent 阶段最多 4,800 秒，为有限的 development 对照预留时间。</p></div>
+                  <div class="decision"><h4>数据边界</h4><p><b>7,223 条 GSM8K train 用于训练，250 条 development 仅供比较。</b>GSM8K test 与 GSM-Symbolic 均禁止进入训练。</p></div>
+                  <div class="decision"><h4>产物协议</h4><p><b>提交可加载的 PEFT LoRA adapter。</b>verifier 重载固定 base，而不是接受完整模型或外部服务答案。</p></div>
+                  <div class="decision"><h4>评分协议</h4><p><b>Main / P1 / P2 各 250 题，宏平均。</b>三个版本等权，避免题量差异主导总分。</p></div>
+                </div>
+              </section>
+
+              <section class="subsection" aria-labelledby="quality-heading">
+                <div class="subsection-heading"><h3 id="quality-heading">B. 质量控制</h3><span>让任务的输入、输出与分数可追溯</span></div>
+                <div class="quality-grid">
+                  <div class="quality-card"><span class="card-label">Data</span><h4>数据可追溯</h4><p>训练 / development 固定切分；GSM-Symbolic revision 与 SHA256 锁定，评测文件随 verifier 包提供。</p></div>
+                  <div class="quality-card"><span class="card-label">Evaluation</span><h4>评分可复现</h4><p>同一 verifier 在同题、同 prompt、贪心解码下评估 base 与 adapter；Main / P1 / P2 分开报分再宏平均。</p></div>
+                  <div class="quality-card"><span class="card-label">Isolation</span><h4>训练与评分隔离</h4><p>Agent 仅允许 DeepSeek API 与安装 CLI 所需的两个包源；verifier 完全断网，重载原始 base 与提交 adapter 后评分。</p></div>
+                  <div class="quality-card"><span class="card-label">Integrity</span><h4>提交可审计</h4><p>强制提交训练脚本、实际训练 JSONL 与摘要；对 development / 最终题作数字归一化 n-gram 近重复审查。</p></div>
+                </div>
+                <div class="validity-guide" aria-label="有效与无效提交的区别">
+                  <div class="validity-case valid"><span class="card-label">有效提交</span><h4>能力分数可以比较</h4><p>adapter 可加载、证据齐全、训练数据未命中 development / final eval 重合检查时，报告真实 score 和 delta；即使分数低于 base，仍是有效实验结果。</p></div>
+                  <div class="validity-case invalid"><span class="card-label">无效提交</span><h4>协议失效，而非能力为零</h4><p>缺 adapter 或提交证据、训练数据格式/记录不一致，或命中近重复审查时，verifier 写数值型 0 分；审计原因另存 <code>submission_status.json</code>。该结果不进入可信比较。</p></div>
+                </div>
+              </section>
+
+              <section class="subsection" aria-labelledby="diagnostic-heading">
+                <div class="subsection-heading"><h3 id="diagnostic-heading">C. 诊断性复评分</h3><span>验证 verifier 闭环，不把旧产物误报为有效正式成绩</span></div>
+                <div class="diagnostic-banner"><b>复评分对象：</b>历史 LoRA adapter。该 trial 缺少最终训练脚本、实际训练 JSONL 与运行摘要；为获得模型行为诊断，复评分显式关闭了证据门禁。因此它能解释模型表现，但 <b>valid_submission = 0</b>，不能作为新协议下的有效 benchmark 成绩。</div>
+                <div class="diagnostic-grid" aria-label="诊断性复评分总览">
+                  <div class="diagnostic-metric"><span>BASE SCORE</span><b>0.4373</b><span>同协议固定基座分数</span></div>
+                  <div class="diagnostic-metric"><span>ADAPTER SCORE</span><b>0.3947</b><span>历史 adapter 的诊断分数</span></div>
+                  <div class="diagnostic-metric"><span>DELTA SCORE</span><b class="negative">−0.0427</b><span>总分低于 base</span></div>
+                  <div class="diagnostic-metric"><span>VERIFIER TIME</span><b>23m 41s</b><span>adapter-only 实测时长</span></div>
+                </div>
+                <table class="score-table" aria-label="base 与 adapter 的分版本分数对照">
+                  <thead><tr><th>版本</th><th>Base</th><th>Adapter</th><th>变化</th></tr></thead>
+                  <tbody>
+                    <tr><td>Main</td><td>0.656</td><td>0.668</td><td class="up">+0.012</td></tr>
+                    <tr><td>P1</td><td>0.444</td><td>0.352</td><td class="down">−0.092</td></tr>
+                    <tr><td>P2</td><td>0.212</td><td>0.164</td><td class="down">−0.048</td></tr>
+                  </tbody>
+                  <tfoot><tr><td>等权总分</td><td>0.4373</td><td>0.3947</td><td class="down">−0.0427</td></tr></tfoot>
+                </table>
+                <p class="result-note">Harbor 已成功解析仅含数值字段的 reward；审计状态与原因独立保存。23 分 41 秒的实测也说明 verifier 保留 2,400 秒（40 分钟）比 20 分钟更稳妥。</p>
+                <div class="insight-grid" aria-label="诊断性复评分的解释边界">
+                  <article class="insight observed"><span class="card-label">已观察到</span><h4>总分为何下降？</h4><p>Main 仅上升 0.012，但 P1 / P2 分别下降 0.092 和 0.048。总分按三版等权平均，因此 Main 的小幅提升无法抵消条件变化版本的退化。</p></article>
+                  <article class="insight"><span class="card-label">本次可得结论</span><h4>未观察到稳健性提升</h4><p>在当前固定推理与评测协议下，该 adapter 没有展示 GSM-Symbolic 条件变化鲁棒性的提升；它不能作为“后训练有效”的证据。</p></article>
+                  <article class="insight hypothesis"><span class="card-label">待验证假设</span><h4>为什么会这样？</h4><p>可能是训练数据仍偏原始 GSM8K 题型、训练改变了原题行为却未形成改写不变性，或有限预算下出现过拟合/能力干扰。需结合逐题结果、实际训练数据和 dev 表现判断。</p></article>
+                </div>
+              </section>
+
+              <section class="subsection" aria-labelledby="attempt-heading">
+                <div class="subsection-heading"><h3 id="attempt-heading">D. 尝试与问题</h3><span>将障碍、应对与证据状态分开陈述</span></div>
+                <ol class="attempts">
+                  <li class="attempt"><span class="attempt-dot" aria-hidden="true"></span><div class="attempt-label">GPU 运行环境</div><div class="attempt-body"><p><b>问题：</b>普通 AutoDL 容器不支持 Docker，无法直接运行 Harbor trial。</p><p><b>应对：</b>改用具备 Docker daemon 与 NVIDIA Container Toolkit 的 GPU 主机。</p><p><span class="status done">已验证</span>Docker 容器可识别并使用 GPU。</p></div></li>
+                  <li class="attempt"><span class="attempt-dot" aria-hidden="true"></span><div class="attempt-label">Harbor GPU 声明</div><div class="attempt-body"><p><b>问题：</b>Harbor 0.23 的默认 Docker provider 拒绝 `gpus = 1`。</p><p><b>应对：</b>增加 DockerGPUEnvironment，并通过 Compose 显式请求 NVIDIA 设备。</p><p><span class="status done">已验证</span>任务已通过 GPU capability 检查。</p></div></li>
+                  <li class="attempt"><span class="attempt-dot" aria-hidden="true"></span><div class="attempt-label">污染与开发反馈</div><div class="attempt-body"><p><b>问题：</b>仅靠题面禁止无法证明训练数据未触及最终评测，Agent 也缺少合法的策略比较信号。</p><p><b>应对：</b>从 GSM8K train 划出 250 条 development split；要求提交训练脚本、实际 JSONL 和摘要，并在 verifier 做近重复审查。</p><p><span class="status done">已实现</span>development 仅用于策略选择，不进入最终 reward。</p></div></li>
+                  <li class="attempt"><span class="attempt-dot" aria-hidden="true"></span><div class="attempt-label">真实 Agent 时限</div><div class="attempt-body"><p><b>问题：</b>首次真实 Agent trial 虽完成 586 步 LoRA 训练，但总时限 3,600 秒耗尽在开发评估，Harbor 未进入最终 verifier。</p><p><b>应对：</b>将“训练预算”和“Agent 总阶段”拆开：训练最多 3,600 秒，Agent 阶段最多 4,800 秒，并限制 development 对照的范围。</p><p><span class="status active">下一轮验证</span>需以新时限和完整证据重新运行，才能产生有效正式成绩。</p></div></li>
+                  <li class="attempt"><span class="attempt-dot" aria-hidden="true"></span><div class="attempt-label">Verifier 闭环</div><div class="attempt-body"><p><b>问题：</b>早期 regrade 因 reward JSON 含字符串字段而被 Harbor 拒绝；adapter-only 评测也实测超过 20 分钟。</p><p><b>应对：</b>reward 仅保留数值字段，审计原因改写入 <code>submission_status.json</code>；固定评测离线提供，且采用 batch size 8 的确定性贪心解码。</p><p><span class="status done">已验证</span>Harbor 已成功解析 reward；历史 adapter 的诊断复评分完成，耗时 23 分 41 秒。</p></div></li>
+                </ol>
+              </section>
+
+              <aside class="conclusion" aria-label="当前结论">
+                <h3>当前结论</h3>
+                <p><strong>已在 RTX 3090 验证：</strong>环境构建、GPU 透传、Agent LoRA 训练、development 诊断、离线 verifier、数值型 reward 解析，以及历史 adapter 的诊断复评分。<br><strong>当前诊断：</strong>adapter 0.3947，低于 base 0.4373；它解释了模型行为，但因缺少新协议要求的训练证据而无效。<br><strong>下一步：</strong>以 4,800 秒 Agent 阶段重新运行，提交完整证据并通过重合审查，获得可报告的有效正式成绩。</p>
+              </aside>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <footer>
+      <span>内部展示稿 · v0.1 · 2026-09</span>
+      <span>事实依据：任务包、实验计划与当前验证记录</span>
+    </footer>
+  </main>
+  <script>
+    const triggers = [...document.querySelectorAll('.accordion-trigger')];
+    const setOpen = (activeTrigger) => {
+      triggers.forEach((trigger) => {
+        const panel = document.getElementById(trigger.getAttribute('aria-controls'));
+        const isActive = trigger === activeTrigger;
+        trigger.setAttribute('aria-expanded', String(isActive));
+        panel.classList.toggle('is-open', isActive);
+      });
+    };
+    triggers.forEach((trigger) => {
+      trigger.addEventListener('click', () => {
+        const isOpen = trigger.getAttribute('aria-expanded') === 'true';
+        setOpen(isOpen ? null : trigger);
+      });
+    });
+  </script>
+</body>
+</html>

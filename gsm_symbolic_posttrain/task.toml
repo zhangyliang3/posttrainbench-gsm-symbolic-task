@@ -1,0 +1,37 @@
+schema_version = "1.3"
+artifacts = ["/logs/artifacts/"]
+
+[task]
+name = "interview/gsm-symbolic-posttrain-robustness"
+description = "Improve a fixed base math model on GSM-Symbolic Main, P1 and P2 under a bounded post-training budget."
+keywords = ["post-training", "math", "gsm-symbolic", "adapter"]
+
+[metadata]
+category = "machine-learning"
+difficulty_explanation = "The agent must choose training data and method, produce a valid adapter, and generalize across three controlled complexity levels."
+
+[agent]
+# Total Agent-phase wall clock, including setup, development checks and submission.
+timeout_sec = 4800
+network_mode = "allowlist"
+# Agent API plus the package hosts Harbor needs to provision its runtime.
+allowed_hosts = ["api.deepseek.com", "mirrors.aliyun.com", "registry.npmjs.org"]
+
+[verifier]
+# Independent verifier wall clock; adapter-only evaluation took about 24 minutes.
+timeout_sec = 2400
+environment_mode = "separate"
+network_mode = "no-network"
+
+[verifier.env]
+EVAL_INSTANCES_PER_TEMPLATE = "${EVAL_INSTANCES_PER_TEMPLATE:-5}"
+EVAL_BATCH_SIZE = "${EVAL_BATCH_SIZE:-8}"
+REQUIRE_SUBMISSION_EVIDENCE = "${REQUIRE_SUBMISSION_EVIDENCE:-1}"
+
+[environment]
+cpus = 8
+memory_mb = 30720
+storage_mb = 30720
+gpus = 1
+network_mode = "public"
+workdir = "/workspace"

@@ -1,0 +1,23 @@
+{
+  "protocol_id": "gsm-symbolic-v1-4shot-greedy384-batch8",
+  "base_model": "Qwen/Qwen2.5-Math-1.5B",
+  "base_revision": "4a83ca6e4526a4f2da3aa259ec36c259f66b2ab2",
+  "base_weights_sha256": "f7aa8d665ab44d3b461bed742fe93cdcedc15d2e31e50dc372c126e6f720857b",
+  "eval_data_sha256": "2cb60c80b1bc79518e4844a3f04de0b08da7dffd9bf50a757e6646d619c60931",
+  "source_sha256": {
+    "main": "945055837b232bd9b56827b1e3a5aa019075f29e8ba4669d9a9df8b4439a291f",
+    "p1": "5478fe81b9cdc5d9447514ca68b0dfbb6cb01b7227fefadf143469b103b592ac",
+    "p2": "00496e6c36bd746d56b28cffcd9385f78f0568a5fe1543650ddf9b55d398251c"
+  },
+  "metrics": {
+    "score": 0.43733333333333335,
+    "acc_main": 0.656,
+    "acc_p1": 0.444,
+    "acc_p2": 0.212,
+    "n_main": 250.0,
+    "n_p1": 250.0,
+    "n_p2": 250.0
+  },
+  "measured_on": "2026-09-29",
+  "note": "Computed by the fixed verifier against the exact 750-row evaluation file; the paired trial itself was legacy and is used here only to establish the base reference."
+}

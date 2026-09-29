@@ -1,0 +1,24 @@
+# Local operating-system and Python byproducts
+.DS_Store
+__pycache__/
+*.py[cod]
+
+# Credentials and local configuration
+.env
+.env.*
+*.key
+*.pem
+*token*
+*secret*
+api_keys.json
+
+# Harbor runtime output and large generated submissions
+jobs/
+logs/
+/artifacts/
+adapter_model.safetensors
+*.safetensors
+
+# Final GSM-Symbolic questions and answers stay local so a public review copy
+# does not disclose the held-out evaluation set.
+gsm_symbolic_posttrain/tests/data/*.jsonl
